@@ -1,10 +1,8 @@
 from nltk.corpus import wordnet #dictionnary D
-import PyDictionary
 import pytrec_eval
-import BirkBeck #Spelling error C
-import _io
 import numpy as np
-
+import warnings
+import operator
 
 def MED(source, target):
     s = len(source)
@@ -39,70 +37,62 @@ def MED(source, target):
 
     return distance[s, t]
 
-corpus = open('./Assign.1 (Spell Correction)/Data/UPWARDDAT.643', 'r')
+def find_nearest_token(token):
+    warnings.filterwarnings('ignore') #Remove SyntaxWarning for the special_char variable
+    special_char = '|!@#$%^&*()_-=+,.<>/\?;:~`1234567890'
+    words = [w for w in wordnet.all_lemma_names()
+        if len([c for c in list(token) if c in list(w)]) > 0 and not any (c in special_char for c in w)]
+    nearest_token = sorted([(MED(token, w), w) for w in words], key=lambda n:n[0])
+    return nearest_token
+
+def find_top_k (nearest_token, k):
+    length = len(nearest_token) - 1 
+    while length > k:
+        nearest_token.pop(length)
+        length -= 1
+    return nearest_token
+
+corpus = open('Assign.1 (Spell Correction)/Data/APPLING2DAT.643', 'r')
 line = 0
 corpus_list = []
+correct_word = []
+incorrect_word = []
 
-while line <= 20:
+while line <= 5:
     read_string = corpus.readline()
     temp_string = read_string.replace('\n', '')
-    string = temp_string.split("  ")
+    string = temp_string.split(" ")
     corpus_list.append(string)
     line += 1
-corpus.close()
 
-correct_word = ''
-incorrect_word = ''
-words = [n for n in wordnet.all_lemma_names() if len(n) <= 10 and n.find("_") == -1]
+for i in range(len(corpus_list)):
+    correct_word.append(corpus_list[i][1])
+    incorrect_word.append(corpus_list[i][0])
 
-s1 = []
-s5 = []
-s10 = []
-count = 0
+for c in range(len(correct_word))  :
+    correct_spell = correct_word[c]
+    print(correct_spell)
+    incorrect_spell = incorrect_word[c]
+    checked_token = []
+    s1_list = []
+    s5_list = []
+    s10_list = []
+    count = 0
 
-for c in corpus_list:
-    distance = []
-    count += 1
-    for w in words:
-        new_word = (w, MED('#'+w, '#'+c[0]))
-        #print(new_word)
-        distance.append(new_word)
-    sort_distance = sorted(distance, key=lambda x: x[1])
+    for k in [1, 5, 10]:
+        temp_list = find_nearest_token(incorrect_spell)
+        checked_token = find_top_k(temp_list, k)
+        #print(checked_token)
+        for i in range(len(checked_token)):
+            count += 1
+            if checked_token[i][1] == correct_spell:
+                if  i == 0:
+                    s1_list.append(checked_token[i][0])
+                elif i == 4:
+                    s5_list.append(checked_token[i][0])
+                elif i == 9:
+                    s10_list.append(checked_token[i][0])
 
-    lowest_distance = []
-    for i in range(0,10):
-        lowest_distance.append(sort_distance[i])
-    #print(lowest_distance)
-    if c[1] == lowest_distance[0][0]:
-        k1 = 1
-    else:
-        k1 = 0
-    s1.append(k1)
-    #print(s1)
-
-    k5 = 0
-    for i in range(0, 4):
-        if c[1] == lowest_distance[i][0]:
-            k5 = 1
-            break
-    s5.append(k5)
-    
-    k10 = 0
-    for i in range(0,9):
-        if c[1] == lowest_distance[i][0]:
-            k10 = 1
-            break
-    s10.append(k10)
-
-print("Average s@1 ", pytrec_eval.compute_aggregated_measure("gm", s1))
-print("Average s@5 ", pytrec_eval.compute_aggregated_measure("gm", s5))
-print("Average s@10 ", pytrec_eval.compute_aggregated_measure("gm", s10))
-
-
-
-"""for i in range (len(corpus_list)):
-    print(corpus_list[i])
-    correct_word = corpus_list[i][0]
-    incorrect_word = corpus_list[i][1]
-    print(MED(correct_word, incorrect_word))
-    print('\n')"""
+    print("s@k for k = 1: ", sum(s1_list)/count)
+    print("s@k for k = 5: ", sum(s5_list)/count)
+    print("s@k for k = 10: ", sum(s10_list)/count) 
