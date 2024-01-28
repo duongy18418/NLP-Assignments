@@ -1,2 +1,3 @@
 nltk
-PyDictionary
+numpy
+pytrec-eval-terrier

@@ -1,8 +1,6 @@
 from nltk.corpus import wordnet #dictionnary D
 import pytrec_eval
 import numpy as np
-import warnings
-import operator
 
 def MED(source, target):
     s = len(source)
@@ -38,7 +36,6 @@ def MED(source, target):
     return distance[s, t]
 
 def find_nearest_token(token):
-    warnings.filterwarnings('ignore') #Remove SyntaxWarning for the special_char variable
     special_char = '|!@#$%^&*()_-=+,.<>/\?;:~`1234567890'
     words = [w for w in wordnet.all_lemma_names()
         if len([c for c in list(token) if c in list(w)]) > 0 and not any (c in special_char for c in w)]
@@ -81,8 +78,7 @@ for c in range(len(correct_word))  :
 
     for k in [1, 5, 10]:
         temp_list = find_nearest_token(incorrect_spell)
-        checked_token = find_top_k(temp_list, k)
-        #print(checked_token)
+        checked_token = find_top_k(temp_list, k)       
         for i in range(len(checked_token)):
             count += 1
             if checked_token[i][1] == correct_spell:
@@ -92,7 +88,11 @@ for c in range(len(correct_word))  :
                     s5_list.append(checked_token[i][0])
                 elif i == 9:
                     s10_list.append(checked_token[i][0])
+            else:
+                s1_list.append(0)
+                s5_list.append(0)
+                s10_list.append(0)
 
-    print("s@k for k = 1: ", sum(s1_list)/count)
-    print("s@k for k = 5: ", sum(s5_list)/count)
-    print("s@k for k = 10: ", sum(s10_list)/count) 
+    print("s@k for k = 1: ", pytrec_eval.compute_aggregated_measure('gm',s1_list))
+    print("s@k for k = 5: ", pytrec_eval.compute_aggregated_measure("gm", s5_list))
+    print("s@k for k = 10: ", pytrec_eval.compute_aggregated_measure("gm", s10_list))  
