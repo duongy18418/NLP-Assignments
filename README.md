@@ -10,4 +10,6 @@ The group for this repository has 2 members:
 
 ### Setup Instruction
 1. (Optional) Clone this Github Repository
+`git clone https://github.com/duongy18418/NLP-Assignments.git`
 2. Run Requirements.txt
+`pip install Requirements.txt`
