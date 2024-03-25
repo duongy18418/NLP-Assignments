@@ -1,3 +1,5 @@
 nltk
 numpy
 pytrec-eval-terrier
+gensim
+scikit-learn
